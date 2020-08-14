@@ -1,17 +1,21 @@
 package com.swarn.imageloader
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.net.URL
+
 
 /**
  * @author Swarn Singh
  */
 object Util {
+
+    const val IO_BUFFER_SIZE = 8 * 1024
 
     fun downloadBitmapFromURL(
         imageUrl: String,
@@ -70,5 +74,9 @@ object Util {
         }
 
         return inSampleSize
+    }
+
+    fun getExternalCacheDir(context: Context): File? {
+        return context.externalCacheDir
     }
 }

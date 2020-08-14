@@ -16,6 +16,7 @@ import com.swarn.redditviewer.adapter.RedditAdapter
 import com.swarn.redditviewer.ui.activity.MainActivity
 import com.swarn.redditviewer.viewmodel.RedditViewModel
 import com.swarn.redditviewer.vo.Resource
+import java.io.File
 
 class RedditFragment : Fragment() {
 

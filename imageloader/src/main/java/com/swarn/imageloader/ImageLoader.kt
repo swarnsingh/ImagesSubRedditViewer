@@ -14,6 +14,9 @@ import java.util.concurrent.Executors
 /**
  * @author Swarn Singh
  */
+private const val DISK_CACHE_SUB_DIR = "thumbnails"
+private const val DISK_CACHE_SIZE = 1024 * 1024 * 10 // 10MB
+
 class ImageLoader {
 
     private val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -24,6 +27,8 @@ class ImageLoader {
 
     private var memoryCache: LruCache<String, Bitmap>
 
+    private var diskLruImageCache: DiskLruImageCache
+
     private val imgMap = Collections.synchronizedMap(WeakHashMap<ImageView, String>())
 
     private val executorService: ExecutorService
@@ -32,6 +37,7 @@ class ImageLoader {
 
     private var screenWidth: Int = 0
     private var screenHeight: Int = 0
+
 
     companion object {
         private var singleton: ImageLoader? = null
@@ -56,6 +62,8 @@ class ImageLoader {
                 return bitmap.byteCount / 1024
             }
         }
+
+        diskLruImageCache = DiskLruImageCache(context, DISK_CACHE_SUB_DIR, DISK_CACHE_SIZE, Bitmap.CompressFormat.JPEG, 100)
 
         executorService = Executors.newFixedThreadPool(threadPoolSize) { r ->
             Thread(r).apply {
@@ -133,11 +141,17 @@ class ImageLoader {
     inner class BitmapWorkerTask(private var imageView: ImageView, var url: String) : Runnable {
         override fun run() {
 
-            val bitmap = Util.downloadBitmapFromURL(
-                url,
-                getScreenWidth(),
-                getScreenHeight()
-            )
+            var bitmap = diskLruImageCache.getBitmap(url)
+
+            if (bitmap == null) {
+                bitmap = Util.downloadBitmapFromURL(
+                    url,
+                    getScreenWidth(),
+                    getScreenHeight()
+                )
+                bitmap?.let { diskLruImageCache.put(url, it) }
+            }
+
             if (bitmap != null) {
                 getMemoryCache().put(url, bitmap)
 
